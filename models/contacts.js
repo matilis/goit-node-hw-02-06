@@ -17,8 +17,7 @@ async function listContacts() {
 
 async function getContactById(contactId) {
   try {
-    const data = await fs.readFile(contactsPath);
-    const contacts = JSON.parse(data);
+    const contacts = await listContacts();
     const contact = contacts.find((item) => item.id === contactId);
     console.table(contact);
     return contact;
@@ -29,14 +28,13 @@ async function getContactById(contactId) {
 
 async function addContact(contact) {
   try {
-    const data = await fs.readFile(contactsPath);
-    const contacts = JSON.parse(data);
+    const contacts = await listContacts();
     const newContact = {
       id: uuidv4(),
       ...contact,
     };
 
-    fs.writeFile(contactsPath, JSON.stringify([...contacts, newContact]));
+    await fs.writeFile(contactsPath, JSON.stringify([...contacts, newContact]));
     console.table(newContact);
     return newContact;
   } catch (error) {
@@ -46,8 +44,7 @@ async function addContact(contact) {
 
 async function removeContact(contactId) {
   try {
-    const data = await fs.readFile(contactsPath);
-    const contacts = JSON.parse(data);
+    const contacts = await listContacts();
     const newContacts = contacts.filter((item) => item.id !== contactId);
     await fs.writeFile(contactsPath, JSON.stringify(newContacts));
     console.table(newContacts);
@@ -59,8 +56,7 @@ async function removeContact(contactId) {
 
 async function updateContact(contactId, updatedContactId) {
   try {
-    const data = await fs.readFile(contactsPath);
-    const contacts = JSON.parse(data);
+    const contacts = await listContacts();
     const index = contacts.findIndex((item) => item.id === contactId);
 
     if (index !== -1) {

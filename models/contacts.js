@@ -1,77 +1,64 @@
-const fs = require("fs/promises");
-const path = require("path");
-const { v4: uuidv4 } = require("uuid");
+const Contact = require("../service/schemas/contact");
 
-const contactsPath = path.resolve("./models/contacts.json");
-
-async function listContacts() {
+const listContacts = async () => {
   try {
-    const data = await fs.readFile(contactsPath);
-    const contacts = JSON.parse(data);
-    console.table(contacts);
-    return contacts;
+    return await Contact.find();
   } catch (error) {
-    console.error(error);
-  }
-}
-
-async function getContactById(contactId) {
-  try {
-    const contacts = await listContacts();
-    const contact = contacts.find((item) => item.id === contactId);
-    console.table(contact);
-    return contact;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-async function addContact(contact) {
-  try {
-    const contacts = await listContacts();
-    const newContact = {
-      id: uuidv4(),
-      ...contact,
-    };
-
-    await fs.writeFile(contactsPath, JSON.stringify([...contacts, newContact]));
-    console.table(newContact);
-    return newContact;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-async function removeContact(contactId) {
-  try {
-    const contacts = await listContacts();
-    const newContacts = contacts.filter((item) => item.id !== contactId);
-    await fs.writeFile(contactsPath, JSON.stringify(newContacts));
-    console.table(newContacts);
-    return contacts;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-async function updateContact(contactId, updatedContactId) {
-  try {
-    const contacts = await listContacts();
-    const index = contacts.findIndex((item) => item.id === contactId);
-
-    if (index !== -1) {
-      contacts[index] = { ...contacts[index], ...updatedContactId };
-      await fs.writeFile(contactsPath, JSON.stringify(contacts));
-      console.table(contacts[index]);
-      return contacts[index];
-    } else {
-      throw new Error("Contact not found");
-    }
-  } catch (error) {
-    console.error(error);
+    console.log("Error getting contact list: ", error);
     throw error;
   }
-}
+};
+
+const getContactById = async (contactId) => {
+  try {
+    return await Contact.findOne({ _id: contactId });
+  } catch (error) {
+    console.log(`Error getting contact with id ${contactId}: `, error);
+    throw error;
+  }
+};
+
+const removeContact = async (contactId) => {
+  try {
+    return await Contact.findByIdAndRemove({ _id: contactId });
+  } catch (error) {
+    console.log(`Error removing contact with id ${contactId}: `, error);
+    throw error;
+  }
+};
+
+const addContact = async (body) => {
+  try {
+    return await Contact.create(body);
+  } catch (error) {
+    console.log("Error adding new contact: ", error);
+    throw error;
+  }
+};
+
+const updateContact = async (contactId, body) => {
+  try {
+    return await Contact.findByIdAndUpdate({ _id: contactId }, body, {
+      new: true,
+    });
+  } catch (error) {
+    console.error("An Error occurred while updating contact: ", error);
+    throw error;
+  }
+};
+
+const updatedStatusContact = async (contactId, favorite) => {
+  try {
+    return await Contact.findByIdAndUpdate(
+      { _id: contactId },
+      { $set: { favorite: favorite } },
+      { new: true }
+    );
+  } catch (error) {
+    console.error("An Error occurred while updating contact: ", error);
+    throw error;
+  }
+};
 
 module.exports = {
   listContacts,
@@ -79,4 +66,5 @@ module.exports = {
   removeContact,
   addContact,
   updateContact,
+  updatedStatusContact,
 };

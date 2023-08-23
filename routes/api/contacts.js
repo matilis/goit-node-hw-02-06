@@ -1,18 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const Joi = require("joi");
-
-const postContactSchema = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().email().required(),
-  phone: Joi.string().required(),
-});
-
-const putContactSchema = Joi.object({
-  name: Joi.string(),
-  email: Joi.string().email(),
-  phone: Joi.string(),
-});
 
 const contacts = require("../../models/contacts");
 
@@ -54,10 +41,8 @@ router.post("/", async (req, res, next) => {
   try {
     const newContact = req.body;
 
-    const { error } = postContactSchema.validate(newContact);
     if (error) {
       res.status(400).json({
-        message: "Validation error",
         error: error.details[0].message,
       });
       return;
@@ -106,10 +91,8 @@ router.put("/:contactId", async (req, res, next) => {
     const { contactId } = req.params;
     const updatedContact = req.body;
 
-    const { error } = putContactSchema.validate(updatedContact);
     if (error) {
       res.status(400).json({
-        message: "Validation error",
         error: error.details[0].message,
       });
       return;
@@ -133,4 +116,29 @@ router.put("/:contactId", async (req, res, next) => {
     });
   }
 });
+
+router.patch("/:contactId", async (req, res, next) => {
+  try {
+    const { contactId } = req.params;
+    const { favorite } = req.body;
+
+    const contact = await contacts.updateContact(contactId, { favorite });
+
+    if (contact) {
+      res.status(200).json({
+        message: "success",
+        data: { contact },
+      });
+    } else {
+      res.status(404).json({ message: "Not found" });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "error",
+      error: error.message,
+    });
+  }
+});
+
 module.exports = router;

@@ -3,7 +3,8 @@ const app = require("./app");
 
 require("dotenv").config();
 
-const uriDb = process.env.DB_HOST;
+const uriDb =
+  "mongodb+srv://matilis:qwE123@cluster0.jno86a9.mongodb.net/db-contacts?retryWrites=true&w=majority";
 
 const startServer = async () => {
   try {

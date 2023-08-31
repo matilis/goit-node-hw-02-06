@@ -37,32 +37,6 @@ router.get("/:contactId", async (req, res, next) => {
   }
 });
 
-// router.post("/", async (req, res, next) => {
-//   try {
-//     const newContact = req.body;
-
-//     if (error) {
-//       res.status(400).json({
-//         error: error.details[0].message,
-//       });
-//       return;
-//     }
-
-//     const createdContact = await contacts.addContact(newContact);
-
-//     res.status(201).json({
-//       message: "success",
-//       data: { createdContact },
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({
-//       message: "error",
-//       error: error.message,
-//     });
-//   }
-// });
-
 router.post("/", async (req, res, next) => {
   const { name, email, phone, favorite } = req.body;
 

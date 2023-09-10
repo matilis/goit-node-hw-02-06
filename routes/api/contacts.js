@@ -3,19 +3,40 @@ const router = express.Router();
 
 const contacts = require("../../models/contacts");
 
+const paginatedResults = (array, page, limit) => {
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+
+  const results = array.slice(startIndex, endIndex);
+  return results;
+};
+
 router.get("/", async (req, res, next) => {
   try {
     const contactsList = await contacts.listContacts();
-    res.status(200).json({
-      message: "success",
-      data: { contactsList },
+
+    const { page = 1, limit = 20 } = req.query;
+    let filteredContacts = contactsList.filter(
+      (favorite) => favorite.favorite === true
+    );
+
+    const paginatedContacts = paginatedResults(filteredContacts, page, limit);
+
+    const totalContacts = filteredContacts.length;
+    const totalPages = Math.ceil(totalContacts / limit);
+
+    return res.status(200).json({
+      status: "success",
+      code: 200,
+      data: {
+        contacts: paginatedContacts,
+        totalContacts: totalContacts,
+        totalPages: totalPages,
+        contactsPerPage_True: limit,
+      },
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "error",
-      error: error.message,
-    });
+    res.status(500).json(`Contacts download error - ${error}`);
   }
 });
 

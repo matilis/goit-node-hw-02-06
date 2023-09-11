@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
 const users = require("../../models/users");
-const passport = require("passport");
+const { auth } = require("../../config/auth");
 
 require("dotenv").config();
 const secret = process.env.SECRET;
@@ -68,15 +68,6 @@ router.post("/login", async (req, res, next) => {
     res.status(500).json(`An error occurred while adding the user: ${error}`);
   }
 });
-
-const auth = (req, res, next) => {
-  passport.authenticate("jwt", { session: false }, (error, user) => {
-    if (!user || error)
-      return res.status(401).json({ message: "Not authorized" });
-    req.user = user;
-    next();
-  })(req, res, next);
-};
 
 router.get("/current", auth, async (req, res, next) => {
   try {

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-
 const contacts = require("../../models/contacts");
+const { auth } = require("../../config/auth");
 
 const paginatedResults = (array, page, limit) => {
   const startIndex = (page - 1) * limit;
@@ -11,7 +11,7 @@ const paginatedResults = (array, page, limit) => {
   return results;
 };
 
-router.get("/", async (req, res, next) => {
+router.get("/", auth, async (req, res, next) => {
   try {
     const contactsList = await contacts.listContacts();
 
@@ -40,7 +40,7 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.get("/:contactId", async (req, res, next) => {
+router.get("/:contactId", auth, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const contact = await contacts.getContactById(contactId);
@@ -58,7 +58,7 @@ router.get("/:contactId", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", auth, async (req, res, next) => {
   const { name, email, phone, favorite } = req.body;
 
   if (Object.keys({ name, email, phone, favorite }).length === 0) {
@@ -82,7 +82,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:contactId", async (req, res, next) => {
+router.put("/:contactId", auth, async (req, res, next) => {
   const { contactId } = req.params;
   const { name, email, phone, favorite } = req.body;
 
@@ -112,7 +112,7 @@ router.put("/:contactId", async (req, res, next) => {
   }
 });
 
-router.patch("/:contactId", async (req, res, next) => {
+router.patch("/:contactId", auth, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { favorite } = req.body;
@@ -136,7 +136,7 @@ router.patch("/:contactId", async (req, res, next) => {
   }
 });
 
-router.delete("/:contactId", async (req, res, next) => {
+router.delete("/:contactId", auth, async (req, res, next) => {
   try {
     const { contactId } = req.params;
 

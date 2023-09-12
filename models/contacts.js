@@ -1,57 +1,61 @@
 const Contact = require("../service/schemas/contact");
 
-const listContacts = async (owner) => {
+const listContacts = async (userId) => {
   try {
-    return await Contact.find({ owner });
+    return await Contact.find({ owner: userId });
   } catch (error) {
     console.log("Error getting contact list: ", error);
     throw error;
   }
 };
 
-const getContactById = async (contactId, owner) => {
+const getContactById = async (contactId, userId) => {
   try {
-    return await Contact.findOne({ _id: contactId, owner });
+    return await Contact.findOne({ _id: contactId, owner: userId });
   } catch (error) {
     console.log(`Error getting contact with id ${contactId}: `, error);
     throw error;
   }
 };
 
-const removeContact = async (contactId, owner) => {
+const removeContact = async (contactId, userId) => {
   try {
-    return await Contact.findByIdAndRemove({ _id: contactId, owner });
+    return await Contact.findByIdAndRemove({ _id: contactId, owner: userId });
   } catch (error) {
     console.log(`Error removing contact with id ${contactId}: `, error);
     throw error;
   }
 };
 
-const addContact = async (body, owner) => {
+const addContact = async (body, userId) => {
   try {
-    const contact = { body, owner };
-    return await Contact.create(contact);
+    const newContact = new Contact({ ...body, owner: userId });
+    return await newContact.save();
   } catch (error) {
     console.log("Error adding new contact: ", error);
     throw error;
   }
 };
 
-const updateContact = async (contactId, body, owner) => {
+const updateContact = async (contactId, body, userId) => {
   try {
-    return await Contact.findByIdAndUpdate({ _id: contactId, owner }, body, {
-      new: true,
-    });
+    return await Contact.findByIdAndUpdate(
+      { _id: contactId, owner: userId },
+      body,
+      {
+        new: true,
+      }
+    );
   } catch (error) {
     console.error("An Error occurred while updating contact: ", error);
     throw error;
   }
 };
 
-const updatedStatusContact = async (contactId, favorite, owner) => {
+const updatedStatusContact = async (contactId, favorite, userId) => {
   try {
     return await Contact.findByIdAndUpdate(
-      { _id: contactId, owner },
+      { _id: contactId, owner: userId },
       { $set: { favorite: favorite } },
       { new: true }
     );

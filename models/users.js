@@ -18,11 +18,11 @@ const getUserById = async (id) => {
   }
 };
 
-const removeUser = async (userId) => {
+const removeUser = async (id) => {
   try {
-    return await User.findByIdAndRemove({ _id: userId });
+    return await User.findByIdAndRemove(id);
   } catch (error) {
-    console.log(`Error removing User with id ${userId}: `, error);
+    console.log(`Error removing User with id ${id}: `, error);
     throw error;
   }
 };

@@ -13,7 +13,8 @@ const paginatedResults = (array, page, limit) => {
 
 router.get("/", auth, async (req, res, next) => {
   try {
-    const contactsList = await contacts.listContacts();
+    const { id: userId } = req.user;
+    const contactsList = await contacts.listContacts(userId);
 
     const { page = 1, limit = 20 } = req.query;
     let filteredContacts = contactsList.filter(
@@ -59,6 +60,7 @@ router.get("/:contactId", auth, async (req, res, next) => {
 });
 
 router.post("/", auth, async (req, res, next) => {
+  const { id: userId } = req.user;
   const { name, email, phone, favorite } = req.body;
 
   if (Object.keys({ name, email, phone, favorite }).length === 0) {
@@ -68,7 +70,15 @@ router.post("/", auth, async (req, res, next) => {
   }
 
   try {
-    const contact = await contacts.addContact({ name, email, phone, favorite });
+    const contact = await contacts.addContact(
+      {
+        name,
+        email,
+        phone,
+        favorite,
+      },
+      userId
+    );
 
     return res.status(201).json({
       status: "success",

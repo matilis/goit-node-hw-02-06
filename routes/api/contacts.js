@@ -1,25 +1,47 @@
 const express = require("express");
 const router = express.Router();
-
 const contacts = require("../../models/contacts");
+const { auth } = require("../../config/auth");
 
-router.get("/", async (req, res, next) => {
+const paginatedResults = (array, page, limit) => {
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+
+  const results = array.slice(startIndex, endIndex);
+  return results;
+};
+
+router.get("/", auth, async (req, res, next) => {
   try {
-    const contactsList = await contacts.listContacts();
-    res.status(200).json({
-      message: "success",
-      data: { contactsList },
+    const { id: userId } = req.user;
+    const contactsList = await contacts.listContacts(userId);
+
+    const { page = 1, limit = 20 } = req.query;
+    let filteredContacts = contactsList.filter(
+      (favorite) => favorite.favorite === true
+    );
+
+    const paginatedContacts = paginatedResults(filteredContacts, page, limit);
+
+    const totalContacts = filteredContacts.length;
+    const totalPages = Math.ceil(totalContacts / limit);
+
+    return res.status(200).json({
+      status: "success",
+      code: 200,
+      data: {
+        contacts: paginatedContacts,
+        totalContacts: totalContacts,
+        totalPages: totalPages,
+        contactsPerPage_True: limit,
+      },
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "error",
-      error: error.message,
-    });
+    res.status(500).json(`Contacts download error - ${error}`);
   }
 });
 
-router.get("/:contactId", async (req, res, next) => {
+router.get("/:contactId", auth, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const contact = await contacts.getContactById(contactId);
@@ -37,7 +59,8 @@ router.get("/:contactId", async (req, res, next) => {
   }
 });
 
-router.post("/", async (req, res, next) => {
+router.post("/", auth, async (req, res, next) => {
+  const { id: userId } = req.user;
   const { name, email, phone, favorite } = req.body;
 
   if (Object.keys({ name, email, phone, favorite }).length === 0) {
@@ -47,7 +70,15 @@ router.post("/", async (req, res, next) => {
   }
 
   try {
-    const contact = await contacts.addContact({ name, email, phone, favorite });
+    const contact = await contacts.addContact(
+      {
+        name,
+        email,
+        phone,
+        favorite,
+      },
+      userId
+    );
 
     return res.status(201).json({
       status: "success",
@@ -61,7 +92,7 @@ router.post("/", async (req, res, next) => {
   }
 });
 
-router.put("/:contactId", async (req, res, next) => {
+router.put("/:contactId", auth, async (req, res, next) => {
   const { contactId } = req.params;
   const { name, email, phone, favorite } = req.body;
 
@@ -91,7 +122,7 @@ router.put("/:contactId", async (req, res, next) => {
   }
 });
 
-router.patch("/:contactId", async (req, res, next) => {
+router.patch("/:contactId", auth, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { favorite } = req.body;
@@ -115,7 +146,7 @@ router.patch("/:contactId", async (req, res, next) => {
   }
 });
 
-router.delete("/:contactId", async (req, res, next) => {
+router.delete("/:contactId", auth, async (req, res, next) => {
   try {
     const { contactId } = req.params;
 

@@ -47,11 +47,12 @@ router.post("/login", async (req, res, next) => {
         .status(400)
         .json({ message: "Error! Email or password is wrong!" });
     }
-    const { id, subscription } = user;
+    const { id, subscription, avatarURL } = user;
     const payload = {
       id,
       email,
       subscription,
+      avatarURL,
     };
 
     const token = jwt.sign(payload, secret, { expiresIn: "1h" });
@@ -62,7 +63,7 @@ router.post("/login", async (req, res, next) => {
       status: "success",
       code: 200,
       token: token,
-      user: { email, subscription },
+      user: { email, subscription, avatarURL },
     });
   } catch (error) {
     res.status(500).json(`An error occurred while adding the user: ${error}`);
@@ -77,11 +78,11 @@ router.get("/current", auth, async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: "Error! User not found!" });
     }
-    const { email, subscription } = user;
+    const { email, subscription, avatarURL } = user;
     return res.status(200).json({
       status: "success",
       code: 200,
-      data: { email, subscription },
+      data: { email, subscription, avatarURL },
     });
   } catch (err) {
     res.status(500).json(`An error occurred while getting the contact: ${err}`);

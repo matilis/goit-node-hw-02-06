@@ -1,4 +1,5 @@
 const User = require("../service/schemas/users");
+const gravatar = require("gravatar");
 
 const allUsers = async () => {
   try {
@@ -32,8 +33,10 @@ const signup = async (body) => {
   if (existingUser) {
     return 409;
   }
+  const avatarURL = gravatar.url(body.email, { s: "250", r: "pg", d: "retro" });
+  const user = { ...body, avatarURL };
   try {
-    return await User.create(body);
+    return await User.create(user);
   } catch (error) {
     console.log("Error adding new user: ", error);
     throw error;

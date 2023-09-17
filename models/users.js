@@ -1,9 +1,7 @@
 const User = require("../service/schemas/users");
-const fs = require("fs");
-const path = require("path");
-const fetch = require("node-fetch");
 const gravatar = require("gravatar");
-const jimp = require("jimp");
+const Jimp = require("jimp");
+const fs = require("fs/promises");
 
 const allUsers = async () => {
   try {
@@ -38,9 +36,7 @@ const signup = async (body) => {
   if (existingUser) {
     return 409;
   }
-  const userAvatar = gravatar
-    .url(email, { s: "250", r: "pg", d: "retro" })
-    .replace(/^\/\//, "https://");
+  const userAvatar = gravatar.url(email, { s: "250", r: "pg", d: "retro" });
   const user = { ...body, avatarURL: userAvatar };
 
   try {
@@ -59,10 +55,36 @@ const login = async (body) => {
   }
 };
 
+const patchAvatar = async (filePath, id) => {
+  try {
+    const localPath = `public/avatars/avatar-${id}.jpg`;
+    const serverPath = `http://localhost:3000/${localPath.replace(
+      /^public\//,
+      ""
+    )}`;
+
+    const avatarSize = await Jimp.read(filePath);
+    await avatarSize.resize(250, 250).quality(60).writeAsync(localPath);
+
+    await User.findByIdAndUpdate(
+      { _id: id },
+      { $set: { avatarURL: localPath } },
+      { new: true, select: "avatarURL" }
+    );
+
+    await fs.unlink(filePath);
+    return serverPath;
+  } catch (error) {
+    console.error("An error occurred while updating avatar: ", error);
+    throw error;
+  }
+};
+
 module.exports = {
   allUsers,
   getUserById,
   removeUser,
   signup,
   login,
+  patchAvatar,
 };

@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require("jsonwebtoken");
 const users = require("../../models/users");
 const { auth } = require("../../config/auth");
+const { upload } = require("../../config/multer");
 
 require("dotenv").config();
 const secret = process.env.SECRET;

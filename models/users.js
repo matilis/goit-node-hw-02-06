@@ -1,5 +1,9 @@
 const User = require("../service/schemas/users");
+const fs = require("fs");
+const path = require("path");
+const fetch = require("node-fetch");
 const gravatar = require("gravatar");
+const jimp = require("jimp");
 
 const allUsers = async () => {
   try {
@@ -29,12 +33,16 @@ const removeUser = async (id) => {
 };
 
 const signup = async (body) => {
-  const existingUser = await User.findOne(body);
+  const { email } = body;
+  const existingUser = await User.findOne({ email });
   if (existingUser) {
     return 409;
   }
-  const avatarURL = gravatar.url(body.email, { s: "250", r: "pg", d: "retro" });
-  const user = { ...body, avatarURL };
+  const userAvatar = gravatar
+    .url(email, { s: "250", r: "pg", d: "retro" })
+    .replace(/^\/\//, "https://");
+  const user = { ...body, avatarURL: userAvatar };
+
   try {
     return await User.create(user);
   } catch (error) {
@@ -42,7 +50,6 @@ const signup = async (body) => {
     throw error;
   }
 };
-
 const login = async (body) => {
   try {
     return await User.findOne(body);

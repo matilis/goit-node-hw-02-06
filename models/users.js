@@ -36,7 +36,9 @@ const signup = async (body) => {
   if (existingUser) {
     return 409;
   }
-  const userAvatar = gravatar.url(email, { s: "250", r: "pg", d: "retro" });
+  const userAvatar = gravatar
+    .url(email, { s: "250", r: "pg", d: "retro" })
+    .replace(/^\/\//, "https://");
   const user = { ...body, avatarURL: userAvatar };
 
   try {

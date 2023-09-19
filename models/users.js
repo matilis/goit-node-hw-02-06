@@ -60,10 +60,7 @@ const login = async (body) => {
 const patchAvatar = async (filePath, id) => {
   try {
     const localPath = `public/avatars/avatar-${id}.jpg`;
-    const serverPath = `http://localhost:3000/${localPath.replace(
-      /^public\//,
-      ""
-    )}`;
+    const serverPath = `/${localPath.replace(/^public\//, "")}`;
 
     const avatarSize = await Jimp.read(filePath);
     await avatarSize.resize(250, 250).quality(60).writeAsync(localPath);

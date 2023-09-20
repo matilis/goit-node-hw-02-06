@@ -1,8 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+
 const users = require("../../models/users");
 const { auth } = require("../../config/auth");
+const { uploadImage } = require("../../config/multer");
+const { patchAvatar } = require("../../models/users");
 
 require("dotenv").config();
 const secret = process.env.SECRET;
@@ -47,11 +50,12 @@ router.post("/login", async (req, res, next) => {
         .status(400)
         .json({ message: "Error! Email or password is wrong!" });
     }
-    const { id, subscription } = user;
+    const { id, subscription, avatarURL } = user;
     const payload = {
       id,
       email,
       subscription,
+      avatarURL,
     };
 
     const token = jwt.sign(payload, secret, { expiresIn: "1h" });
@@ -62,7 +66,7 @@ router.post("/login", async (req, res, next) => {
       status: "success",
       code: 200,
       token: token,
-      user: { email, subscription },
+      user: { email, subscription, avatarURL },
     });
   } catch (error) {
     res.status(500).json(`An error occurred while adding the user: ${error}`);
@@ -77,11 +81,11 @@ router.get("/current", auth, async (req, res, next) => {
     if (!user) {
       return res.status(404).json({ message: "Error! User not found!" });
     }
-    const { email, subscription } = user;
+    const { email, subscription, avatarURL } = user;
     return res.status(200).json({
       status: "success",
       code: 200,
-      data: { email, subscription },
+      data: { email, subscription, avatarURL },
     });
   } catch (err) {
     res.status(500).json(`An error occurred while getting the contact: ${err}`);
@@ -91,6 +95,7 @@ router.get("/current", auth, async (req, res, next) => {
 router.get("/logout", auth, async (req, res, next) => {
   try {
     const { id } = req.user;
+
     const user = await users.getUserById(id);
     if (!user) {
       return res.status(401).json({ message: "Not authorized" });
@@ -103,35 +108,31 @@ router.get("/logout", auth, async (req, res, next) => {
   }
 });
 
-router.patch("/", auth, async (req, res, next) => {
-  try {
-    const { id } = req.user;
-    const { subscription } = req.body;
-
-    if (!["starter", "pro", "business"].includes(subscription)) {
-      return res.status(400).json({ message: "Invalid subscription value" });
+router.patch(
+  "/avatars",
+  auth,
+  uploadImage.single("avatar"),
+  async (req, res) => {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json("Error! Missing file!");
     }
-
-    const user = await users.getUserById(id);
-
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized" });
+    const { path } = file;
+    const { id: userId } = req.user;
+    try {
+      const newAvatarPath = await patchAvatar(path, userId);
+      return res.status(200).json({
+        status: "success",
+        code: 200,
+        avatarURL: newAvatarPath,
+      });
+    } catch (err) {
+      res
+        .status(500)
+        .json(`An error occurred while updating the avatar: ${err}`);
     }
-
-    user.subscription = subscription;
-    await user.save();
-
-    res.status(200).json({
-      status: "success",
-      code: 200,
-      data: { subscription: user.subscription },
-    });
-  } catch (error) {
-    res.status(500).json({
-      message: `An error occurred while updating subscription: ${error}`,
-    });
   }
-});
+);
 
 router.get("/", async (req, res, next) => {
   try {

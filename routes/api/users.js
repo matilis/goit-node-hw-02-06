@@ -5,7 +5,11 @@ const jwt = require("jsonwebtoken");
 const users = require("../../models/users");
 const { auth } = require("../../config/auth");
 const { uploadImage } = require("../../config/multer");
-const { patchAvatar } = require("../../models/users");
+const {
+  patchAvatar,
+  verificationMail,
+  verificationUserEmail,
+} = require("../../models/users");
 
 require("dotenv").config();
 const secret = process.env.SECRET;
@@ -50,11 +54,12 @@ router.post("/login", async (req, res, next) => {
         .status(400)
         .json({ message: "Error! Email or password is wrong!" });
     }
-    const { id, subscription, avatarURL } = user;
+    const { id, subscription, verificationToken, avatarURL } = user;
     const payload = {
       id,
       email,
       subscription,
+      verificationToken,
       avatarURL,
     };
 
@@ -66,7 +71,7 @@ router.post("/login", async (req, res, next) => {
       status: "success",
       code: 200,
       token: token,
-      user: { email, subscription, avatarURL },
+      user: { email, subscription, verificationToken, avatarURL },
     });
   } catch (error) {
     res.status(500).json(`An error occurred while adding the user: ${error}`);
@@ -133,6 +138,42 @@ router.patch(
     }
   }
 );
+
+router.get("/verify/:verificationToken", async (req, res, next) => {
+  const { verificationToken } = req.params;
+  try {
+    await verificationUserEmail(verificationToken);
+
+    console.log("Verification successful");
+
+    return res.status(200).json({ message: "Verification successful" });
+  } catch (error) {
+    res.status(error.code || 500).json({
+      message:
+        error.message ||
+        `An udentified error occured while verifying user:  ${error}`,
+    });
+  }
+});
+
+router.post("/verify", async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: "Error: Email is required" });
+  }
+
+  try {
+    await verificationMail(email);
+    return res.status(200).json({ message: "Verification email sent" });
+  } catch (error) {
+    res.status(error.code || 500).json({
+      message:
+        error.message ||
+        `An udentified error occured while sending verification email user:  ${error}`,
+    });
+  }
+});
 
 router.get("/", async (req, res, next) => {
   try {

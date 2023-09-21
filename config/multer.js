@@ -1,7 +1,7 @@
 const multer = require("multer");
 
 const storageImage = multer.diskStorage({
-  destination: "tmp",
+  destination: ".tmp",
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now();
     const originalExtension = file.originalname.split(".").pop();

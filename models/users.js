@@ -17,7 +17,7 @@ const verificationMsg = (email, verificationToken) => {
     from: "nodehm06@gmail.com",
     subject: "Please verify your email",
     text: "Please click the link below to verify your email:",
-    html: `Verify your email (verificationToken:${verificationToken}`,
+    html: `<a href="http://localhost:3000/api/users/verify/${verificationToken}">Verify your email </a>`,
   };
 
   console.log("Email:", message.to);

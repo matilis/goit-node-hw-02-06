@@ -39,6 +39,7 @@ router.post("/signup", async (req, res, next) => {
 
 router.post("/login", async (req, res, next) => {
   const { email, password } = req.body;
+  const { verify } = req.params;
 
   if (!email || !password) {
     return res
@@ -46,6 +47,9 @@ router.post("/login", async (req, res, next) => {
       .json({ message: "Error! Missing fields! Empty request is not allowed" });
   }
 
+  if (!verify) {
+    return res.status(400).json({ message: "Error! Please verify your email" });
+  }
   try {
     const user = await users.login(req.body);
 
@@ -82,9 +86,15 @@ router.get("/current", auth, async (req, res, next) => {
   try {
     const { id } = req.user;
     const user = await users.getUserById(id);
+    const { verify } = req.params;
 
     if (!user) {
       return res.status(404).json({ message: "Error! User not found!" });
+    }
+    if (!verify) {
+      return res
+        .status(400)
+        .json({ message: "Error! Please verify your email" });
     }
     const { email, subscription, avatarURL } = user;
     return res.status(200).json({
